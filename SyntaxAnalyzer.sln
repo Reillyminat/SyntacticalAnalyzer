@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.352
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyntaxAnalyzer", "SyntaxAnalyzer\SyntaxAnalyzer.csproj", "{2766170B-ED21-4668-9CC4-B4DCD5169EE5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2766170B-ED21-4668-9CC4-B4DCD5169EE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2766170B-ED21-4668-9CC4-B4DCD5169EE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2766170B-ED21-4668-9CC4-B4DCD5169EE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2766170B-ED21-4668-9CC4-B4DCD5169EE5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {B32B5FC1-26CD-4C44-861B-752C93EB5B21}
+	EndGlobalSection
+EndGlobal
