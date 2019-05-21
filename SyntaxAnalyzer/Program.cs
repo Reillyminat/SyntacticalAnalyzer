@@ -7,7 +7,8 @@ namespace SyntaxAnalyzer
     {
         static void Main(string[] args)
         {
-            
+            Console.OutputEncoding = System.Text.Encoding.Default;
+            SyntaxAnalyse p = new SyntaxAnalyse();
         }
     }
 }
