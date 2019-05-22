@@ -8,31 +8,31 @@ namespace SyntaxAnalyzer
 {
     public class SyntaxAnalyse
     {
+        private string[] grammar;
         public SyntaxAnalyse()
         {
             string buf = File.ReadAllText(@"Formal grammar.txt", Encoding.UTF8);
-            string[] grammar = buf.Split(new String[] { "\n" }, StringSplitOptions.None);
+            grammar = buf.Split(new String[] { "\n" }, StringSplitOptions.None);
             List<State> temp = new List<State>();
-            string lex = "";
             string substring = "";
             string founded;
             int skipCount = 0;
+            int count = 0;
             bool repeat = false;
-            bool nonterminal = false;
             for (int j = 0; j < grammar.Length; j++)
             {
                 substring = grammar[j];
                 founded = FindBeginning(grammar[j]);
-                nonterminal=FindNonterminal(founded);
                 if (skipCount > 0)
                 {
                     skipCount--;
                 }
                 else
                 {
+                    count = founded.Length + 2;
                     if (j + 1 != grammar.Length && BranchRepeat(grammar[j], grammar[j + 1]))
-                        temp.Add(new State(founded, true));
-                    else temp.Add(new State(founded, false));
+                        temp.Add(new State(ExpectedTerminal(substring, count), true));
+                    else temp.Add(new State(ExpectedTerminal(substring, count), false));
                     repeat = false;
                 }
                 if (!repeat)
@@ -40,56 +40,56 @@ namespace SyntaxAnalyzer
                     while (j + 1 != grammar.Length && BranchRepeat(grammar[j], grammar[j + 1]))
                     {
                         repeat = true;
+                        count = founded.Length + 2;
                         if (j + 2 != grammar.Length && BranchRepeat(grammar[j + 1], grammar[j + 2]))
-                            temp.Add(new State(FindBeginning(grammar[j + 1]), true));
-                        else temp.Add(new State(FindBeginning(grammar[j + 1]), false));
+                            temp.Add(new State(ExpectedTerminal(grammar[j + 1], count), true));
+                        else temp.Add(new State(ExpectedTerminal(grammar[j + 1], count), false));
                         skipCount++;
                         j++;
                     }
                     j = j - skipCount;
                 }
-                for (int i = founded.Length; i < substring.Length; i++)
-                {
-                    if (substring[i] == ' ' || substring[i] == '\r' || substring[i] == '\n')
-                    {
-                        if (i + 1 == substring.Length)
-                        {
-                            temp.Add(new State(lex, false));
-                            lex = "";
-                            continue;
-                        }
-                        if (substring[i + 1] == '>')
-                        {
-                            temp.Add(new State(lex, false));
-                            lex = "";
-                            lex += substring[i + 1];
-                            i++;
-                        }
-                        else
-                        {
-                            temp.Add(new State(lex, false));
-                            lex = "";
-                        }
-                    }
-                    else if (substring[i] == '-' && substring[i + 1] == '>')
-                    {
-                        i++;
-                        continue;
-                    }
-                    else lex += substring[i];
-                }
-            }
-            for (int i = 0; i < temp.Count; i++)
-            {
-
+                for (int i = founded.Length + 2; i < substring.Length; i++)
+                    temp.Add(new State(FindState(substring, ref i), false));
             }
             StateMachineBuilder ex = new StateMachineBuilder();
             ex.SaveToFile(temp);
-            for (int i = 0; i < temp.Count; i++)
+            /*for (int i = 0; i < temp.Count; i++)
             {
                 Console.WriteLine("Name: {0} Suppress: {1}", temp[i].Name, temp[i].Suppress);
             }
-            Console.WriteLine(temp.Count);
+            Console.WriteLine(temp.Count);*/
+        }
+        private int JumpToRule(string nonterminal)
+        {
+            int i = 0;
+            while (FindBeginning(grammar[i]) != nonterminal)
+            {
+                i++;
+            }
+            return i;
+        }
+        private string ExpectedTerminal(string substring, int count)
+        {
+            string res = "";
+            res = FindState(substring, ref count);
+            if (FindNonterminal(res))
+            {
+                JumpToRule(res);
+                return null;
+            }
+            return res;
+            
+        }
+        private static string FindState(string substring, ref int i)
+        {
+            string lex = "";
+            while (substring[i] != ' ' && substring[i] != '\r' && substring[i] != '\n')
+            {
+                lex += substring[i];
+                i++;
+            }
+            return lex;
         }
         private static string FindBeginning(string line)
         {
@@ -110,7 +110,7 @@ namespace SyntaxAnalyzer
         }
         private static bool FindNonterminal(string lexem)
         {
-            if (Regex.IsMatch(lexem[0].ToString(), @"[A-ZАБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ]"))
+            if (Regex.IsMatch(lexem[0].ToString(), @"[A-ZАБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ]")&&lexem.Length!=1)
             {
                 return true;
             }
