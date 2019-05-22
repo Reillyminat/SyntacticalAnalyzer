@@ -3,11 +3,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
 
 namespace SyntaxAnalyzer
 {
     class StateMachineBuilder
     {
-
+        public void SaveToFile(List<State> states)
+        {
+            using (FileStream fs = new FileStream(@"State machine.txt", FileMode.Create, FileAccess.Write))
+            using (StreamWriter sw = new StreamWriter(fs))
+            {
+                int i = 0;
+                sw.WriteLine("{0,-3} {1,-30} {2,-3} {3,-3} {4,-3} {5,-3} {6,-3}\n", "№", "Ожидаемый терминал", "Переход", "Принять", "В стек", "Из стека", "Ошибка");
+                foreach (State state in states)
+                {
+                    i++;
+                    sw.WriteLine("{0,-3} {1,-30} {2,-7} {3,-7} {4,-6} {5,-8} {6,-7} ", i, state.Name, i, i, i,i,state.Suppress);
+                }
+                sw.WriteLine();
+            }
+        }
     }
 }

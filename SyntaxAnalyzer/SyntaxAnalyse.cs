@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.IO;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace SyntaxAnalyzer
 {
@@ -13,22 +12,27 @@ namespace SyntaxAnalyzer
         {
             string buf = File.ReadAllText(@"Formal grammar.txt", Encoding.UTF8);
             string[] grammar = buf.Split(new String[] { "\n" }, StringSplitOptions.None);
-            List <string> temp = new List<string>();
-            string lex="";
+            List<State> temp = new List<State>();
+            string lex = "";
             string substring = "";
             string founded;
             int skipCount = 0;
             bool repeat = false;
-            for (int j=0;j<grammar.Length;j++)
+            bool nonterminal = false;
+            for (int j = 0; j < grammar.Length; j++)
             {
                 substring = grammar[j];
                 founded = FindBeginning(grammar[j]);
+                nonterminal=FindNonterminal(founded);
                 if (skipCount > 0)
                 {
                     skipCount--;
                 }
-                else {
-                    temp.Add(founded);
+                else
+                {
+                    if (j + 1 != grammar.Length && BranchRepeat(grammar[j], grammar[j + 1]))
+                        temp.Add(new State(founded, true));
+                    else temp.Add(new State(founded, false));
                     repeat = false;
                 }
                 if (!repeat)
@@ -36,7 +40,9 @@ namespace SyntaxAnalyzer
                     while (j + 1 != grammar.Length && BranchRepeat(grammar[j], grammar[j + 1]))
                     {
                         repeat = true;
-                        temp.Add(FindBeginning(grammar[j + 1]));
+                        if (j + 2 != grammar.Length && BranchRepeat(grammar[j + 1], grammar[j + 2]))
+                            temp.Add(new State(FindBeginning(grammar[j + 1]), true));
+                        else temp.Add(new State(FindBeginning(grammar[j + 1]), false));
                         skipCount++;
                         j++;
                     }
@@ -48,20 +54,20 @@ namespace SyntaxAnalyzer
                     {
                         if (i + 1 == substring.Length)
                         {
-                            temp.Add(lex);
+                            temp.Add(new State(lex, false));
                             lex = "";
                             continue;
                         }
                         if (substring[i + 1] == '>')
                         {
-                            temp.Add(lex);
+                            temp.Add(new State(lex, false));
                             lex = "";
                             lex += substring[i + 1];
                             i++;
                         }
                         else
                         {
-                            temp.Add(lex);
+                            temp.Add(new State(lex, false));
                             lex = "";
                         }
                     }
@@ -75,15 +81,17 @@ namespace SyntaxAnalyzer
             }
             for (int i = 0; i < temp.Count; i++)
             {
-                Console.WriteLine(temp[i]);
+
+            }
+            StateMachineBuilder ex = new StateMachineBuilder();
+            ex.SaveToFile(temp);
+            for (int i = 0; i < temp.Count; i++)
+            {
+                Console.WriteLine("Name: {0} Suppress: {1}", temp[i].Name, temp[i].Suppress);
             }
             Console.WriteLine(temp.Count);
         }
-        public void Parse()
-        {
-
-        }
-        public static string FindBeginning(string line)
+        private static string FindBeginning(string line)
         {
             string begining = "";
             for (int i = 0; i < line.Length; i++)
@@ -94,11 +102,19 @@ namespace SyntaxAnalyzer
             }
             return begining;
         }
-        public static bool BranchRepeat(string first, string second)
+        private static bool BranchRepeat(string first, string second)
         {
             if (FindBeginning(first) == FindBeginning(second))
                 return true;
             else return false;
+        }
+        private static bool FindNonterminal(string lexem)
+        {
+            if (Regex.IsMatch(lexem[0].ToString(), @"[A-ZАБВГҐДЕЄЖЗИІЇЙКЛМНОПРСТУФХЦЧШЩЬЮЯ]"))
+            {
+                return true;
+            }
+            return false;
         }
     }
 }
