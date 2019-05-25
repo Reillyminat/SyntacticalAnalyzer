@@ -8,9 +8,12 @@ namespace SyntaxAnalyzer
 {
     class State
     {
-        public State(string name, bool suppress)
+        public State(string name, bool accept, int toStack, bool suppress)
         {
+            Console.WriteLine(name);
             Name = name;
+            Accept = accept;
+            ToStack = toStack;
             Suppress = suppress;
         }
         public string Name { get; set; }
