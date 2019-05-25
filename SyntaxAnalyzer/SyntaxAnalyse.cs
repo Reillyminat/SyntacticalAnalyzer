@@ -17,9 +17,7 @@ namespace SyntaxAnalyzer
             List<State> temp = new List<State>();
             List<string> heap = new List<string>();
             str = new List<string>[grammar.Length];
-            string substring = "";
             string buff = "";
-            string founded;
             int skipCount = 0;
             int k = 0;
             bool repeat = false;
@@ -27,8 +25,6 @@ namespace SyntaxAnalyzer
             Transform();
             for (int j = 0; j < str.Length; j++)
             {
-                substring = grammar[j];
-                founded = str[j][0];
                 if (skipCount > 0)
                 {
                     skipCount--;
@@ -38,19 +34,13 @@ namespace SyntaxAnalyzer
                     if (j + 1 != str.Length && BranchRepeat(str[j], str[j + 1]))
                     {
                         buff = ExpectedTerminal(str[j][k], ref terminal, j,ref heap, str[j][k],k);
-                        if (terminal)
-                            temp.Add(new State(str[j][k] + " " + buff, terminal, -1, true));
-                        else
-                            temp.Add(new State(str[j][k] + " " + buff, terminal, temp.Count + 1, true));
+                        temp.Add(new State(str[j][k] + " " + buff, terminal, -1, false, true));
                         terminal = true;
                     }
                     else
                     {
                         buff = ExpectedTerminal(str[j][k], ref terminal, j,ref heap, str[j][k],k);
-                        if (terminal)
-                            temp.Add(new State(str[j][k] + " " + buff, terminal, -1, false));
-                        else
-                            temp.Add(new State(str[j][k] + " " + buff, terminal, temp.Count + 1, false));
+                        temp.Add(new State(str[j][k]+" "+buff, terminal, -1, false, false));
                         terminal = true;
                     }
                     repeat = false;
@@ -63,19 +53,13 @@ namespace SyntaxAnalyzer
                         if (j + 2 != str.Length && BranchRepeat(str[j + 1], str[j + 2]))
                         {
                             buff = ExpectedTerminal(str[j][k], ref terminal, j + 1,ref heap, str[j][k],k);
-                            if (terminal)
-                                temp.Add(new State(str[j][k]+" "+buff, terminal, -1, true));
-                            else
-                                temp.Add(new State(str[j][k] + " " + buff, terminal, temp.Count + 1, true));
+                            temp.Add(new State(str[j][k] + " " + buff, terminal, -1, false, true));
                             terminal = true;
                         }
                         else
                         {
                             buff = ExpectedTerminal(str[j][k], ref terminal, j + 1,ref heap, str[j][k],k);
-                            if (terminal)
-                                temp.Add(new State(str[j][k] + " " + buff, terminal, -1, false));
-                            else
-                                temp.Add(new State(str[j][k] + " " + buff, terminal, temp.Count + 1, false));
+                            temp.Add(new State(str[j][k] + " " + buff, terminal, -1, false, false));
                             terminal = true;
                         }
                         skipCount++;
@@ -87,12 +71,68 @@ namespace SyntaxAnalyzer
                 {
                     buff = ExpectedTerminal(str[j][i], ref terminal, j,ref heap, str[j][i],i);
                     if (terminal)
-                        temp.Add(new State(buff, terminal, -1, false));
+                    {
+                        if (buff == "EM")
+                            temp.Add(new State(buff, false, -1, true, false));
+                        else
+                            temp.Add(new State(buff, terminal, -1, false, false));
+                    }
                     else
-                        temp.Add(new State(str[j][i] + " " + buff, terminal, temp.Count + 1, false));
+                    {
+                        if(i+1< str[j].Count)
+                            temp.Add(new State(str[j][i]+" "+buff, terminal, temp.Count+2, false, false));
+                        else temp.Add(new State(str[j][i]+" "+buff, terminal, -1, false, false));
+                    }
                     terminal = true;
                 }
                 k = 0;
+            }
+            for (int j = 0; j < str.Length; j++)
+            {
+                if (skipCount > 0)
+                {
+                    skipCount--;
+                }
+                else
+                {
+                    if (j + 1 != str.Length && BranchRepeat(str[j], str[j + 1]))
+                    {
+                        temp[k].Jump = k+1;
+                    }
+                    else temp[k].Jump = k+1;
+                    repeat = false;
+                    k++;
+                }
+                if (!repeat)
+                {
+                    while (j + 1 != str.Length && BranchRepeat(str[j], str[j + 1]))
+                    {
+                        repeat = true;
+                        if (j + 2 != str.Length && BranchRepeat(str[j + 1], str[j + 2]))
+                        {
+                            temp[k].Jump = k+1;
+                        }
+                        else
+                        {
+                            temp[k].Jump = k+1;
+                        }
+                        skipCount++;
+                        j++;
+                        k++;
+                    }
+                    j = j - skipCount;
+                }
+                for (int i = 1; i < str[j].Count; i++)
+                {
+                    if (FindNonterminal(str[j][i]))
+                    {
+                        buff = ExpectedTerminal(str[j][i], ref terminal, j, ref heap, str[j][i], i);
+                        State t = temp.Find(x => x.Name == str[j][i]+" "+buff);
+                        temp[k].Jump = temp.IndexOf(t);
+                    }
+                    else temp[k].Jump = k+1;
+                    k++;
+                }
             }
             StateMachineBuilder ex = new StateMachineBuilder();
             ex.SaveToFile(temp);
@@ -124,14 +164,11 @@ namespace SyntaxAnalyzer
                 {
                     if (word == "EM")
                     {
-                        word = "";
                         return word;
                     }
                     if (!Existance(heap, nonterm))
                     {
                         heap.Add(word);
-                        /*if (offset + 1 == str[jump].Count)
-                            return temp;*/
                         word = ExpectedTerminal(str[jump][1], ref terminal, jump, ref heap, str[jump][1],offset);
                         if (!FindNonterminal(word))
                         {
